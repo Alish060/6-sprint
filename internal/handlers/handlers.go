@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -50,5 +51,6 @@ func HandleUploud(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer resultFile.Close()
-
+	res.WriteHeader(http.StatusOK)
+	fmt.Fprint(res, result)
 }
