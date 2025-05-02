@@ -14,8 +14,8 @@ func Convert(text string) string {
 }
 
 func isMorse(text string) bool {
-	text = strings.TrimSpace(text)
-	morseChars := ".-/ "
+	text = strings.ReplaceAll(text, " ", "")
+	morseChars := ".-"
 
 	for _, char := range text {
 		if !strings.ContainsRune(morseChars, char) {

@@ -1,8 +1,7 @@
 package handlers
 
 import (
-	"bufio"
-	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,34 +16,39 @@ func HandleMain(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	form, err := os.ReadFile(filepath)
+	res.Header().Set("Content-Type", "text/html")
+	res.WriteHeader(http.StatusOK)
+	http.ServeFile(res, req, filepath)
+}
+
+func HandleUploud(res http.ResponseWriter, req *http.Request) {
+	err := req.ParseForm()
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	res.Header().Set("Content-Type", "text/html; charset=utf-8")
-	res.WriteHeader(http.StatusOK)
-	fmt.Fprint(res, string(form))
-}
-
-func HandleUploud(res http.ResponseWriter, req *http.Request) {
-	var result string
 	file, _, err := req.FormFile("myFile")
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		result = service.Convert(scanner.Text())
-	}
-	err = os.WriteFile(time.Now().UTC().String()+filepath.Ext(".txt"), []byte(result), 0755)
+	content, err := io.ReadAll(file)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	res.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(res, result)
+	result := service.Convert(string(content))
+	resultFile, err := os.Create(time.Now().UTC().String() + filepath.Ext(".txt"))
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_, err = resultFile.Write([]byte(result))
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer resultFile.Close()
 
 }
